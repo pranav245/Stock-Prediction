@@ -1,0 +1,95 @@
+
+## Front page
+
+
+def main_page():
+    global e1,e2,master
+    master =Tk()
+    master.title("Stock Market Prediction")
+    master.geometry('1200x600+450+250')
+
+    canvas = Canvas(width=700, height=700, bg='black')   
+    canvas.pack(expand=YES, fill=BOTH)      
+
+    frame1=Frame(canvas)
+    frame1.pack(side=TOP)
+
+    frame11=Frame(canvas)
+    frame11.pack(side=LEFT)
+
+    frame12=Frame(canvas)
+    frame12.pack(side=RIGHT)
+
+
+    frame2=Frame(canvas)
+    frame2.pack(side=TOP)
+
+    frame21=Frame(canvas)
+    frame21.pack(side=LEFT)
+
+    frame22=Frame(canvas)
+    frame22.pack(side=RIGHT)
+
+    frame3=Frame(canvas)
+    frame3.pack(side=TOP)
+
+    frame3l=Frame(frame3)
+    frame3l.pack(side=LEFT)
+
+    frame3r=Frame(frame3)
+    frame3r.pack(side=RIGHT)
+
+
+    frame31=Frame(canvas)
+    frame31.pack(side=LEFT)
+
+    frame32=Frame(canvas)
+    frame32.pack(side=RIGHT)
+
+
+    frame4=Frame(canvas)
+    frame4.pack(side=BOTTOM)
+
+    frame41=Frame(canvas)
+    frame41.pack(side=LEFT)
+
+    frame42=Frame(canvas)
+    frame42.pack(side=RIGHT)
+
+    img1=Image.open("i1.png")
+    canvas1=Canvas(frame1 ,relief = "raised" , borderwidth=1)
+    canvas1.pack(fill=BOTH , expand=YES)
+    canvas1.image = ImageTk.PhotoImage(img1)
+    canvas1.create_image(50,50,image=canvas1.image, anchor=NW)
+    
+    img2=Image.open("s1.png")
+    canvas2=Canvas(frame21 ,relief = "raised" , borderwidth=1)
+    canvas2.pack(fill=BOTH , expand=YES)
+    canvas2.image = ImageTk.PhotoImage(img2)
+    canvas2.create_image(0,0,image=canvas2.image, anchor=NW)
+    
+    
+    img3=Image.open("s2.png")
+    canvas3=Canvas(frame22 ,relief = "raised" , borderwidth=1)
+    canvas3.pack(fill=BOTH , expand=YES)
+    canvas3.image = ImageTk.PhotoImage(img3)
+    canvas3.create_image(0,0,image=canvas3.image, anchor=NW)
+    label = Label(frame2, text="Enter Your Detail of CSV file",bg='black',fg='white' , font=("Helvetica",22))
+    label.pack(side=TOP)
+
+    label1=Label(frame3l,text=" File Name  " ,bg="black",  fg="lightblue" , font=("Helvetica",15))
+    label1.pack(side=TOP)
+    label2=Label(frame3l,text="       Path      " ,bg="black", fg="lightblue",font=("Helvetica",15))
+    label2.pack(side=BOTTOM)
+
+    e1 = Entry(frame3r, bg="grey" , fg="black",font=("Helvetica",15))
+    e1.pack(side=TOP)
+    e2 = Entry(frame3r,bg="grey" , fg="black",font=("Helvetica",15))
+    e2.pack(side=BOTTOM)
+
+    btn1=Button(frame4, text='Exit',command=master.destroy,fg="grey",bg="black",borderwidth=1,font=("Helvetica",15))#.grid(row=3, column=0, sticky=W, pady=4)
+    btn1.pack(side=RIGHT )
+    btn2=Button(frame4, text='Submit', command=validate,fg="grey",bg="black",borderwidth=1,font=("Helvetica",15))#.grid(row=3, column=1,sticky=W, pady=4)
+    btn2.pack(side=LEFT)
+
+    master.mainloop()

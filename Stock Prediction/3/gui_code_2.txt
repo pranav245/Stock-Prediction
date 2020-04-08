@@ -1,0 +1,45 @@
+## result table
+
+
+def pred_disp():
+    global testPredict
+    global master
+    
+
+    root=Tk()
+    root.title("Predicted Data")
+    root.geometry('800x700+50+100')
+    data=finalpred[:50]
+    frame = Frame(root)
+    frame.pack()
+    
+    tree = ttk.Treeview(frame,height=20,columns=(3))  #, columns = (2), height = 50, show = "headings")
+    tree["columns"]=(1,2)
+    tree.column(1, width = 100)
+    tree.column(2, width = 100)
+    tree.heading(1, text="Day")
+    tree.heading(2, text="Predicted Value")
+    
+    pp=1
+    for val in data:
+        string1=str(pp)
+        pp=pp+1
+        tree.insert('','end',text="Day" ,values = (string1,val[0]) )
+    
+    
+    scroll = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+    scroll.pack(side = 'right', fill = 'y')
+
+    tree.configure(yscrollcommand=scroll.set)
+    f1=Frame(root)
+    f1.pack(side=BOTTOM)
+    lab1=Button(f1,text="To View Graph click on OK" ,command=root.destroy, bg='black', fg='white' , font=("Helvetica",15) )
+    lab1.pack()
+    
+    #btn1=Button(f1,text="OK", command=root.destroy)
+    
+    #btn1.pack(side=RIGHT)
+    
+    tree.pack()
+
+    root.mainloop()

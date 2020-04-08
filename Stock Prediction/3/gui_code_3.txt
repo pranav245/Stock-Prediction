@@ -1,0 +1,9 @@
+
+## Final Graph
+
+
+plt.plot(scaler.inverse_transform(dataset))
+    plt.plot(trainPredictPlot)
+    plt.plot(testPredictPlot)
+    plt.title("\n\nGraph of Predicted and Actual Values\nGreen:Test Predicted\nBlue: Actual\n Yellow:Train Predicted ")
+    

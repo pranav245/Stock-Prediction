@@ -1,0 +1,267 @@
+from tkinter import ttk
+from tkinter import *
+from tkinter import messagebox
+
+import pandas as pd
+import numpy
+import matplotlib.pyplot as plt
+%matplotlib qt
+#from pandas import read_csv
+import math
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import LSTM
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+import tensorflow as tf
+from PIL import Image, ImageTk
+
+tf.reset_default_graph() # Clears the default graph stack and resets the global default graph.
+testPredict=[]
+finalpred=[]
+
+def start_program():
+    global testPredict
+    global finalpred,master
+    x=e1.get()
+    y=e2.get()
+    
+    # fix random seed for reproducibility
+    numpy.random.seed(7)
+    
+    # load the dataset
+    dataframe = pd.read_csv(x+'.csv', usecols=[1], engine='python')
+    dataset = dataframe.values
+    dataset = dataset.astype('float32')
+    
+    
+    # normalize the dataset
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    dataset = scaler.fit_transform(dataset)
+    
+    
+    # split into train and test sets
+    train_size = int(len(dataset) * 0.67)
+    test_size = len(dataset) - train_size
+    train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
+    
+    
+    # reshape into X=t and Y=t+1
+    look_back = 1
+    trainX, trainY = create_dataset(train, look_back)
+    testX, testY = create_dataset(test, look_back)
+    # reshape input to be [samples, time steps, features]
+    trainX = numpy.reshape(trainX, (trainX.shape[0], 1, trainX.shape[1]))
+    testX = numpy.reshape(testX, (testX.shape[0], 1, testX.shape[1]))
+    
+    
+    # create and fit the LSTM network
+    model = Sequential()
+    model.add(LSTM(4, input_shape=(1, look_back)))
+    model.add(Dense(1))
+    model.compile(loss='mean_squared_error', optimizer='adam')
+    
+    
+    model.fit(trainX, trainY, epochs=5, batch_size=1, verbose=2)
+    
+    
+    # make predictions
+    trainPredict = model.predict(trainX)
+    testPredict = model.predict(testX)
+ #   print('XXXXXXXX',testX,'YYYYYYYYY',testY)
+    finalpred=model.predict(testY.reshape(-1,1,1))
+    # invert predictions
+    trainPredict = scaler.inverse_transform(trainPredict)
+    trainY = scaler.inverse_transform([trainY])
+    testPredict = scaler.inverse_transform(testPredict)
+    finalpred = scaler.inverse_transform(finalpred)
+    #finalPredictions=scaler.inverse_transform(testy)
+    testY = scaler.inverse_transform([testY])
+    
+    
+    # calculate root mean squared error
+    trainScore = math.sqrt(mean_squared_error(trainY[0], trainPredict[:,0]))
+    print('Train Score: %.2f RMSE' % (trainScore))
+    testScore = math.sqrt(mean_squared_error(testY[0], testPredict[:,0]))
+    print('Test Score: %.2f RMSE' % (testScore))
+    
+    
+    # shift train predictions for plotting
+    trainPredictPlot = numpy.empty_like(dataset)
+    trainPredictPlot[:, :] = numpy.nan
+    trainPredictPlot[look_back:len(trainPredict)+look_back, :] = trainPredict
+    # shift test predictions for plotting
+    testPredictPlot = numpy.empty_like(dataset)
+    testPredictPlot[:, :] = numpy.nan
+    testPredictPlot[len(trainPredict)+(look_back*2)+1:len(dataset)-1, :] = testPredict
+    # plot baseline and predictions
+    plt.figure(figsize=(20,10))
+    plt.plot(scaler.inverse_transform(dataset))
+    plt.plot(trainPredictPlot)
+    plt.plot(testPredictPlot)
+    plt.title("\n\nGraph of Predicted and Actual Values\nGreen:Test Predicted\nBlue: Actual\n Yellow:Train Predicted ")
+    master.destroy()
+    plt.show()
+    pred_disp()
+    
+def create_dataset(dataset, look_back=1):
+    dataX, dataY = [], []
+    for i in range(len(dataset)-look_back-1):
+        a = dataset[i:(i+look_back), 0]
+        dataX.append(a)
+        dataY.append(dataset[i + look_back, 0])
+    return numpy.array(dataX), numpy.array(dataY)
+
+def pred_disp():
+    global testPredict
+    global master
+    
+
+    root=Tk()
+    root.title("Predicted Data")
+    root.geometry('800x700+50+100')
+    data=finalpred[:50]
+    frame = Frame(root)
+    frame.pack()
+    
+    tree = ttk.Treeview(frame,height=20,columns=(3))  #, columns = (2), height = 50, show = "headings")
+    tree["columns"]=(1,2)
+    tree.column(1, width = 100)
+    tree.column(2, width = 100)
+    tree.heading(1, text="Day")
+    tree.heading(2, text="Predicted Value")
+    
+    pp=1
+    for val in data:
+        string1=str(pp)
+        pp=pp+1
+        tree.insert('','end',text="Day" ,values = (string1,val[0]) )
+    
+    
+    scroll = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+    scroll.pack(side = 'right', fill = 'y')
+
+    tree.configure(yscrollcommand=scroll.set)
+    f1=Frame(root)
+    f1.pack(side=BOTTOM)
+    lab1=Button(f1,text="To View Graph click on OK" ,command=root.destroy, bg='black', fg='white' , font=("Helvetica",15) )
+    lab1.pack()
+    
+    #btn1=Button(f1,text="OK", command=root.destroy)
+    
+    #btn1.pack(side=RIGHT)
+    
+    tree.pack()
+
+    root.mainloop()
+
+
+global x
+global y
+
+
+def validate():
+    global e1,e2
+    var1=e1.get()
+    var2=e2.get()
+    str1='stock'
+    str2='/media/pranav/D drive/Pune/Stock Market Prediction/'
+    
+    if str1==var1:
+        start_program()
+    else:
+        messagebox.showinfo("Error","Invalid File name or Path")
+
+def main_page():
+    global e1,e2,master
+    master =Tk()
+    master.title("Stock Market Prediction")
+    master.geometry('1200x600+450+250')
+
+    canvas = Canvas(width=700, height=700, bg='black')   
+    canvas.pack(expand=YES, fill=BOTH)      
+
+    frame1=Frame(canvas)
+    frame1.pack(side=TOP)
+
+    frame11=Frame(canvas)
+    frame11.pack(side=LEFT)
+
+    frame12=Frame(canvas)
+    frame12.pack(side=RIGHT)
+
+
+    frame2=Frame(canvas)
+    frame2.pack(side=TOP)
+
+    frame21=Frame(canvas)
+    frame21.pack(side=LEFT)
+
+    frame22=Frame(canvas)
+    frame22.pack(side=RIGHT)
+
+    frame3=Frame(canvas)
+    frame3.pack(side=TOP)
+
+    frame3l=Frame(frame3)
+    frame3l.pack(side=LEFT)
+
+    frame3r=Frame(frame3)
+    frame3r.pack(side=RIGHT)
+
+
+    frame31=Frame(canvas)
+    frame31.pack(side=LEFT)
+
+    frame32=Frame(canvas)
+    frame32.pack(side=RIGHT)
+
+
+    frame4=Frame(canvas)
+    frame4.pack(side=BOTTOM)
+
+    frame41=Frame(canvas)
+    frame41.pack(side=LEFT)
+
+    frame42=Frame(canvas)
+    frame42.pack(side=RIGHT)
+
+    img1=Image.open("i1.png")
+    canvas1=Canvas(frame1 ,relief = "raised" , borderwidth=1)
+    canvas1.pack(fill=BOTH , expand=YES)
+    canvas1.image = ImageTk.PhotoImage(img1)
+    canvas1.create_image(50,50,image=canvas1.image, anchor=NW)
+    
+    img2=Image.open("s1.png")
+    canvas2=Canvas(frame21 ,relief = "raised" , borderwidth=1)
+    canvas2.pack(fill=BOTH , expand=YES)
+    canvas2.image = ImageTk.PhotoImage(img2)
+    canvas2.create_image(0,0,image=canvas2.image, anchor=NW)
+    
+    
+    img3=Image.open("s2.png")
+    canvas3=Canvas(frame22 ,relief = "raised" , borderwidth=1)
+    canvas3.pack(fill=BOTH , expand=YES)
+    canvas3.image = ImageTk.PhotoImage(img3)
+    canvas3.create_image(0,0,image=canvas3.image, anchor=NW)
+    label = Label(frame2, text="Enter Your Detail of CSV file",bg='black',fg='white' , font=("Helvetica",22))
+    label.pack(side=TOP)
+
+    label1=Label(frame3l,text=" File Name  " ,bg="black",  fg="lightblue" , font=("Helvetica",15))
+    label1.pack(side=TOP)
+    label2=Label(frame3l,text="       Path      " ,bg="black", fg="lightblue",font=("Helvetica",15))
+    label2.pack(side=BOTTOM)
+
+    e1 = Entry(frame3r, bg="grey" , fg="black",font=("Helvetica",15))
+    e1.pack(side=TOP)
+    e2 = Entry(frame3r,bg="grey" , fg="black",font=("Helvetica",15))
+    e2.pack(side=BOTTOM)
+
+    btn1=Button(frame4, text='Exit',command=master.destroy,fg="grey",bg="black",borderwidth=1,font=("Helvetica",15))#.grid(row=3, column=0, sticky=W, pady=4)
+    btn1.pack(side=RIGHT )
+    btn2=Button(frame4, text='Submit', command=validate,fg="grey",bg="black",borderwidth=1,font=("Helvetica",15))#.grid(row=3, column=1,sticky=W, pady=4)
+    btn2.pack(side=LEFT)
+
+    master.mainloop()
+
+main_page()
